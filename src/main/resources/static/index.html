@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estoque de Veículos</title>
+    <!-- Fonte moderna -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --bg: #0f172a;
+            --surface: #1e293b;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --success: #10b981;
+            --warning: #f59e0b;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 2rem;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0;
+            letter-spacing: -0.025em;
+        }
+
+        p.subtitle {
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+        }
+
+        .card {
+            background-color: var(--surface);
+            border-radius: 1rem;
+            border: 1px solid var(--border);
+            padding: 2rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+
+        input,
+        select {
+            background-color: var(--bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+        }
+
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.875rem 1.5rem;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            white-space: nowrap;
+        }
+
+        th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .status-disponivel {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .status-vendido {
+            background-color: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
+        .loading,
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-muted);
+            font-size: 1.125rem;
+        }
+
+        /* Animação suave para os itens da tabela */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        tbody tr {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Painel de Veículos</h1>
+            <p class="subtitle">Gerencie o estoque da sua concessionária</p>
+        </div>
+
+        <div class="card">
+            <form id="veiculoForm" onsubmit="adicionarVeiculo(event)">
+                <div class="form-grid">
+                    <!-- ID do Modelo: Em um sistema real, seria um dropdown (select) de Modelos cadastrados -->
+                    <div class="input-group">
+                        <label for="modeloId">ID do Modelo (1, 2, 3...)</label>
+                        <input type="number" id="modeloId" required placeholder="Ex: 1">
+                    </div>
+                    <div class="input-group">
+                        <label for="cor">Cor</label>
+                        <input type="text" id="cor" required placeholder="Ex: Preto">
+                    </div>
+                    <div class="input-group">
+                        <label for="ano">Ano</label>
+                        <input type="number" id="ano" required placeholder="Ex: 2023">
+                    </div>
+                    <div class="input-group">
+                        <label for="preco">Preço (R$)</label>
+                        <input type="number" step="0.01" id="preco" required placeholder="Ex: 120000.00">
+                    </div>
+                    <div class="input-group">
+                        <label for="quilometragem">Quilometragem</label>
+                        <input type="number" id="quilometragem" required placeholder="Ex: 0">
+                    </div>
+                    <div class="input-group">
+                        <label for="status">Status</label>
+                        <select id="status" required>
+                            <option value="Disponível">Disponível</option>
+                            <option value="Vendido">Vendido</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit">Cadastrar Veículo</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <div id="loading" class="loading">Sincronizando com a API...</div>
+            <div id="empty-state" class="empty-state" style="display: none;">Nenhum veículo cadastrado ainda.</div>
+
+            <div class="table-container">
+                <table id="veiculosTable" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Modelo</th>
+                            <th>Cor</th>
+                            <th>Ano</th>
+                            <th>Preço</th>
+                            <th>Km</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="veiculosBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '/veiculos';
+
+        // Formata moeda (R$)
+        const formatarMoeda = (valor) => {
+            return new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+            }).format(valor);
+        };
+
+        // Carrega os veículos da API
+        async function carregarVeiculos() {
+            try {
+                const response = await fetch(API_URL);
+                const veiculos = await response.json();
+
+                const tbody = document.getElementById('veiculosBody');
+                const loading = document.getElementById('loading');
+                const emptyState = document.getElementById('empty-state');
+                const table = document.getElementById('veiculosTable');
+
+                tbody.innerHTML = '';
+                loading.style.display = 'none';
+
+                if (veiculos.length === 0) {
+                    emptyState.style.display = 'block';
+                    table.style.display = 'none';
+                    return;
+                }
+
+                emptyState.style.display = 'none';
+                table.style.display = 'table';
+
+                veiculos.forEach((veiculo, index) => {
+                    const tr = document.createElement('tr');
+                    tr.style.animationDelay = `${index * 0.05}s`; // Efeito em cascata
+
+                    // Trata o modelo (pode vir null caso o ID não exista ou não tenha sido salvo corretamente)
+                    const modeloNome = veiculo.modelo ? veiculo.modelo.nome || `#${veiculo.modelo.id}` : '-';
+                    const statusClass = veiculo.status === 'Disponível' ? 'status-disponivel' : 'status-vendido';
+
+                    tr.innerHTML = `
+                        <td><strong>#${veiculo.id}</strong></td>
+                        <td>${modeloNome}</td>
+                        <td>${veiculo.cor}</td>
+                        <td>${veiculo.ano}</td>
+                        <td>${formatarMoeda(veiculo.preco)}</td>
+                        <td>${veiculo.quilometragem} km</td>
+                        <td><span class="status-badge ${statusClass}">${veiculo.status}</span></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+            } catch (error) {
+                console.error('Erro ao carregar veículos:', error);
+                document.getElementById('loading').innerText = 'Erro ao conectar com o servidor.';
+            }
+        }
+
+        // Adiciona um novo veículo
+        async function adicionarVeiculo(event) {
+            event.preventDefault();
+
+            const btn = event.target.querySelector('button');
+            const originalText = btn.innerText;
+            btn.innerText = 'Salvando...';
+            btn.disabled = true;
+
+            // Monta o objeto no formato esperado pelo Spring (com a relação Modelo)
+            const veiculo = {
+                modelo: {
+                    id: parseInt(document.getElementById('modeloId').value)
+                },
+                cor: document.getElementById('cor').value,
+                ano: parseInt(document.getElementById('ano').value),
+                preco: parseFloat(document.getElementById('preco').value),
+                quilometragem: parseInt(document.getElementById('quilometragem').value),
+                status: document.getElementById('status').value
+            };
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(veiculo)
+                });
+
+                if (response.ok) {
+                    event.target.reset();
+                    await carregarVeiculos();
+                } else {
+                    alert('Erro ao salvar veículo. Verifique se o ID do Modelo realmente existe no banco.');
+                }
+            } catch (error) {
+                console.error('Erro ao salvar:', error);
+                alert('Falha na comunicação com a API.');
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        // Inicializa a listagem ao carregar a página
+        document.addEventListener('DOMContentLoaded', carregarVeiculos);
+    </script>
+</body>
+
+</html>
