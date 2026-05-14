@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/veiculos") // Agora o endereço será http://localhost:8080/veiculos
+@RequestMapping("/veiculos") // Agora o endereço será http://localhost:8080
 public class VeiculoController {
 
     @Autowired
